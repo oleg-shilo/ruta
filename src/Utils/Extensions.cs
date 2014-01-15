@@ -17,6 +17,7 @@ namespace Ruta
         {
             obj.SafeExecute(null, action);
         }
+
         public static void SafeExecute(this Form obj, Cursor executCursor, Action action)
         {
             try
@@ -29,7 +30,7 @@ namespace Ruta
             {
                 if (executCursor != null)
                     obj.Cursor = Cursors.Default;
-                MessageBox.Show(e.ToString());
+                MessageBox.Show(e.ToString(), "Ruta");
             }
             if (executCursor != null)
                 obj.Cursor = Cursors.Default;
@@ -51,6 +52,11 @@ namespace Ruta
         public static string Escape(this string data)
         {
             return data.Replace("|", "{$PIPE}");
+        }
+
+        public static bool HasText(this string data)
+        {
+            return !string.IsNullOrWhiteSpace(data);
         }
 
         public static string Unescape(this string data)
@@ -168,7 +174,7 @@ namespace Ruta
         {
             return Path.Combine(newDir, Path.GetFileName(path));
         }
-        
+
         public static string ChangeFileName(this string path, string newFileName)
         {
             return Path.Combine(Path.GetDirectoryName(path), newFileName);

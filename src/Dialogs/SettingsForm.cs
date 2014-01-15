@@ -22,6 +22,8 @@ namespace Ruta.Dialogs
             autoSaveInterval.Enabled =
             autoSaveCheckBox.Checked = (Settings.AutoSaveIntervalInSeconds > 0);
             autoSaveInterval.Value = Math.Abs(Settings.AutoSaveIntervalInSeconds);
+            editorPath.Text = Settings.EditorApp;
+            generatorPath.Text = Settings.GeneratorApp;
         }
 
         private void okButton_Click(object sender, EventArgs e)
@@ -31,6 +33,8 @@ namespace Ruta.Dialogs
             else
                 Settings.AutoSaveIntervalInSeconds = (int)-autoSaveInterval.Value;
 
+            Settings.EditorApp = editorPath.Text;
+            Settings.GeneratorApp = generatorPath.Text;
             Settings.Save();
             Close();
         }
@@ -38,6 +42,14 @@ namespace Ruta.Dialogs
         private void autoSaveCheckBox_CheckedChanged(object sender, EventArgs e)
         {
             autoSaveInterval.Enabled = autoSaveCheckBox.Checked;
+        }
+
+        private void SettingsForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+                Close();
+            else if (e.KeyCode == Keys.Return)
+                okButton.PerformClick();
         }
     }
 }

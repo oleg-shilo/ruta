@@ -358,6 +358,7 @@ namespace Ruta
             this.editImageButton.Size = new System.Drawing.Size(23, 22);
             this.editImageButton.Text = "toolStripButton1";
             this.editImageButton.ToolTipText = "Edit selected image(s) ";
+            this.editImageButton.Click += new System.EventHandler(this.editImageButton_Click);
             // 
             // toolStripSeparator8
             // 

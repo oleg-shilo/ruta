@@ -1,12 +1,17 @@
 using System;
 using System.Configuration;
 using System.IO;
+using System.Reflection;
 
 namespace Ruta
 {
     static class Settings
     {
         public static float ScaleFactor { get; set; }
+
+        public static string GeneratorApp { get; set; }
+
+        public static string EditorApp { get; set; }
 
         public static string LastExport { get; set; }
 
@@ -35,6 +40,8 @@ namespace Ruta
                 LastRoot = config.AppSettings.Get("LastRoot", defaultRoot);
                 LastAlbum = config.AppSettings.Get("LastAlbum", "");
                 LastExport = config.AppSettings.Get("LastExport", "");
+                EditorApp = config.AppSettings.Get("EditorApp", "");
+                GeneratorApp = config.AppSettings.Get("GeneratorApp", "").ExpandPath();
                 AutoSaveIntervalInSeconds = config.AppSettings.Get("AutoSaveIntervalInSeconds", -5);
                 ScaleFactor = config.AppSettings.Get("ScaleFactor", 0.8f);
 
@@ -52,12 +59,22 @@ namespace Ruta
                 config.AppSettings.Set("LastRoot", LastRoot);
                 config.AppSettings.Set("LastAlbum", LastAlbum);
                 config.AppSettings.Set("LastExport", LastExport);
+                config.AppSettings.Set("GeneratorApp", GeneratorApp.ExpandPath());
+                config.AppSettings.Set("EditorApp", EditorApp);
                 config.AppSettings.Set("AutoSaveIntervalInSeconds", AutoSaveIntervalInSeconds);
                 config.AppSettings.Set("ScaleFactor", ScaleFactor);
 
                 config.Save(ConfigurationSaveMode.Modified);
             }
             catch { }
+        }
+
+        static string ExpandPath(this string path)
+        {
+            if (path == "%this%")
+                return Assembly.GetExecutingAssembly().Location;
+            else
+                return path;
         }
 
         public static string Get(this AppSettingsSection section, string name, string defaultValue)

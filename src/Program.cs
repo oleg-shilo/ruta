@@ -1,16 +1,14 @@
 using System;
-using System.Drawing;
-using System.Windows.Forms;
-using System.ComponentModel;
 using System.IO;
-using System.Drawing.Imaging;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace Ruta
 {
     class Program
     {
         [STAThread]
-        static public void Main()
+        static public void Main(string[] args)
         {
             //foreach (string file in Directory.GetFiles(@"E:\cs-script\cs-scriptWEB\ruta\sample_album\images\original", "*"))
             //{
@@ -27,12 +25,42 @@ namespace Ruta
 
             //Global.Repository.RootDirectory = @"E:\My Photos\WebAlbums\StaticAlbum";
             //Global.Repository.RootDirectory = @"\\MYBOOKLIVE\Public\photo\albums";
-            if (Directory.Exists(Settings.LastRoot))
-                Global.Repository.RootDirectory = Settings.LastRoot;
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new View());
+            if (!RunAsHandleCommandLineApp(args))
+            {
+                if (Directory.Exists(Settings.LastRoot))
+                    Global.Repository.RootDirectory = Settings.LastRoot;
+
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new View());
+            }
+        }
+
+        static bool RunAsHandleCommandLineApp(string[] args)
+        {
+            if (args.Length > 0)
+            {
+                Global.HandleErrors(() =>
+                    {
+                        //<app> -generate <album_file> <output_file>
+                        if (args.Length == 3 && args[0] == "-generate")
+                        {
+                            Global.Repository.BuildGalleryPage(args[1], args[2]);
+                        }
+                        //<app> -export <album_file> <output_dir>
+                        else if (args.Length == 3 && args[0] == "-export")
+                        {
+                            Global.Repository.ExportGallery(args[1], args[2]);
+                        }
+                        //? 
+                        else
+                        {
+                        }
+                    });
+                return true;
+            }
+            return false;
         }
     }
 }

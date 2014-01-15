@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace Ruta
 {
@@ -13,6 +15,48 @@ namespace Ruta
         static Global()
         {
             Global.Repository = new Repository();
+        }
+
+        public static void RunBuildGalleryPageProcess(string app, string inputFile, string outputFile)
+        {
+            RunProcess(app, string.Format("-generate \"{0}\" \"{1}\"", inputFile, outputFile), "save album");
+        }
+        
+        public static void RunExportGalleryProcess(string app, string inputFile, string outputDir)
+        {
+            RunProcess(app, string.Format("-export \"{0}\" \"{1}\"", inputFile, outputDir), "export album");
+        }
+
+        public static void RunProcess(string app, string args, string context)
+        {
+            try
+            {
+                using (var proc = new Process())
+                {
+                    proc.StartInfo.FileName = app;
+                    proc.StartInfo.Arguments = args;
+                    proc.StartInfo.UseShellExecute = false;
+                    proc.StartInfo.CreateNoWindow = true;
+                    proc.Start();
+                    proc.WaitForExit();
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("Cannot " + context + " with " + app + ": " + e.Message, "Ruta");
+            }
+        }
+
+        public static void HandleErrors(Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString(), "Ruta");
+            }
         }
     }
 
@@ -76,6 +120,11 @@ namespace Ruta
             File.WriteAllBytes(Path.Combine(dir, "toolbar_n_icon.png"), GalleryTemplates.Resources.toolbar_n_icon_png);
         }
 
+        public string ExportGallery(string definitionFile, string destinationRootDir)
+        {
+            return Export(Album.Open(definitionFile), destinationRootDir);
+        }
+
         public string Export(Album album, string destinationRootDir)
         {
             var destinationDir = Path.Combine(destinationRootDir, album.Name);
@@ -114,10 +163,9 @@ namespace Ruta
 
             //the WEB page should not be copied but rather regenerated as the original contains invalid (for exporting) path references
             string webPageFile = Path.Combine(destinationDir, "index.html");
-
             BuildGalleryPage(album.Location, webPageFile, true);
-
             return webPageFile;
+
         }
 
         public void BuildGalleryPage(string definitionFile, string destinationFile, bool localContent = false)

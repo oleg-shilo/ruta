@@ -31,15 +31,15 @@ using System.Windows.Forms;
  - IE ShowMixed content warning (http://www.withsteps.com/694/how-to-remove-only-secure-content-is-displayed-ie9-message.html)
  - Chrome ShowMixed content warning (http://www.uwp.edu/departments/campus.technology/information/learning_tech/D2L_Instr/Browsers.pdf)
  + Sample photo album on csscript.net/Dropbox
- - config dialog
+ + config dialog
     + auto-save
-    - generate
-    - edit
+    + generate
+    + edit
  - Custom Actions
     + OnExport allow downsizing the images
     + OnSave rename items to get sequential naming
-    - generate
-    - edit
+    + generate
+    + edit
     - Help
  - Buttons Actions
     + move selection up/down
@@ -52,7 +52,7 @@ using System.Windows.Forms;
     + Play
     + Export album
     + Config
-    - Edit image
+    + Edit image
     - About
     - Help
  - after auto-scrolling reposition items to make the selected item at the cursor position
@@ -642,25 +642,26 @@ namespace Ruta
 
         void SyncDetails()
         {
-            try
-            {
-                if (albumContent.SelectedIndices.Count == 1)
+            if (!suppressDetailsSync)
+                try
                 {
-                    propertyGrid1.SelectedObject = albumContent.SelectedItem;
+                    if (albumContent.SelectedIndices.Count == 1)
+                    {
+                        propertyGrid1.SelectedObject = albumContent.SelectedItem;
 
-                    var item = propertyGrid1.SelectedObject as AlbumItem;
-                    if (item != null)
-                        pictureBox1.ImageLocation = item.Location;
-                    else
+                        var item = propertyGrid1.SelectedObject as AlbumItem;
+                        if (item != null)
+                            pictureBox1.ImageLocation = item.Location;
+                        else
+                            pictureBox1.ImageLocation = null;
+                    }
+                    else if (albumContent.SelectedIndices.Count == 0)
+                    {
+                        propertyGrid1.SelectedObject = null;
                         pictureBox1.ImageLocation = null;
+                    }
                 }
-                else if (albumContent.SelectedIndices.Count == 0)
-                {
-                    propertyGrid1.SelectedObject = null;
-                    pictureBox1.ImageLocation = null;
-                }
-            }
-            catch { }
+                catch { }
         }
 
         void propertyGrid1_ClientSizeChanged(object sender, EventArgs e)
@@ -767,18 +768,29 @@ namespace Ruta
                    () => albumContent.SelectPrevItem());
         }
 
+        bool suppressDetailsSync = false;
         void moveDownButton_Click(object sender, EventArgs e)
         {
+            suppressDetailsSync = true;
+
             albumContent.MoveSelectionDown();
             albumContent.Focus();
             IsModified = true;
+
+            suppressDetailsSync = false;
+            SyncDetails();
         }
 
         void moveUpButton_Click(object sender, EventArgs e)
         {
+            suppressDetailsSync = true;
+
             albumContent.MoveSelectionUp();
             albumContent.Focus();
             IsModified = true;
+
+            suppressDetailsSync = false;
+            SyncDetails();
         }
 
         void saveButton_Click(object sender, EventArgs e)
@@ -796,7 +808,10 @@ namespace Ruta
                           album.Items = albumContent.Items.ToArray<AlbumItem>();
                           album.Save();
 
-                          Global.Repository.BuildGalleryPage(album.Location, album.GetGaleryPageFile());
+                          if (Settings.GeneratorApp.HasText())
+                              Global.RunBuildGalleryPageProcess(Settings.GeneratorApp, album.Location, album.GetGaleryPageFile());
+                          else
+                              Global.Repository.BuildGalleryPage(album.Location, album.GetGaleryPageFile());
 
                           IsModified = false;
                       }
@@ -1041,9 +1056,13 @@ namespace Ruta
                             {
                                 this.WithWaitCursor(() =>
                                     {
-                                        string webPage = Global.Repository.Export(album, dir);
-                                        if (File.Exists(webPage))
-                                            Process.Start(Path.GetDirectoryName(webPage));
+                                        if (Settings.GeneratorApp.HasText())
+                                            Global.RunExportGalleryProcess(Settings.GeneratorApp, album.Location, dir);
+                                        else
+                                            Global.Repository.Export(album, dir);
+
+                                        if (Directory.Exists(dir))
+                                            Process.Start(Path.Combine(dir, album.Name));
                                     });
                             });
                     }
@@ -1069,6 +1088,23 @@ namespace Ruta
         {
             if (e.Data != null && ((DataObject)e.Data).ContainsFileDropList())
                 e.Effect = DragDropEffects.Move;
+        }
+
+        private void editImageButton_Click(object sender, EventArgs e)
+        {
+            if (albumContent.SelectedItem != null)
+                try
+                {
+                    string appPath = Environment.ExpandEnvironmentVariables(Settings.EditorApp);
+
+                    if (!string.IsNullOrWhiteSpace(appPath) && File.Exists(appPath))
+                    {
+                        Process.Start(appPath, "\"" + (albumContent.SelectedItem as AlbumItem).Location + "\"");
+                        return;
+                    }
+                }
+                catch { }
+            MessageBox.Show("Please specify a valid image editor path in the Settings dialog.", "Ruta");
         }
     }
 }
