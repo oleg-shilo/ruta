@@ -56,6 +56,12 @@ namespace Ruta
                         //? 
                         else
                         {
+                            MessageBox.Show("Invalid command line arguments.".AddLines(
+                                             "",
+                                             "The expected arguments are:",
+                                             "      ruta.exe -generate <album_file> <output_file>",
+                                             "      ruta.exe -export <album_file> <output_dir>"),
+                                             "Ruta");
                         }
                     });
                 return true;

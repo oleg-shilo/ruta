@@ -24,12 +24,11 @@ using System.Windows.Forms;
  + Generate album WebPage with different drive file locations (ToRelativeUri should return absolute in such cases)
  + Shortcuts in buttons tooltips
  + clear destination on save
+ + WEB
+    + Auto-play button 
  + External Drag-n-drop
      + File to albumContent
      + Folder to albumContent
- - error handling
- - IE ShowMixed content warning (http://www.withsteps.com/694/how-to-remove-only-secure-content-is-displayed-ie9-message.html)
- - Chrome ShowMixed content warning (http://www.uwp.edu/departments/campus.technology/information/learning_tech/D2L_Instr/Browsers.pdf)
  + Sample photo album on csscript.net/Dropbox
  + config dialog
     + auto-save
@@ -53,11 +52,12 @@ using System.Windows.Forms;
     + Export album
     + Config
     + Edit image
-    - About
+    + About
     - Help
  - after auto-scrolling reposition items to make the selected item at the cursor position
- + WEB
-    + Auto-play button 
+ - error handling
+ - IE ShowMixed content warning (http://www.withsteps.com/694/how-to-remove-only-secure-content-is-displayed-ie9-message.html)
+ - Chrome ShowMixed content warning (http://www.uwp.edu/departments/campus.technology/information/learning_tech/D2L_Instr/Browsers.pdf)
  */
 
 namespace Ruta
@@ -1105,6 +1105,12 @@ namespace Ruta
                 }
                 catch { }
             MessageBox.Show("Please specify a valid image editor path in the Settings dialog.", "Ruta");
+        }
+
+        private void aboutButton_Click(object sender, EventArgs e)
+        {
+            using (var dialog = new AboutBox())
+                dialog.ShowDialog();
         }
     }
 }

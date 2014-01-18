@@ -457,6 +457,7 @@ namespace Ruta
             this.aboutButton.Size = new System.Drawing.Size(23, 22);
             this.aboutButton.Text = "toolStripButton1";
             this.aboutButton.ToolTipText = "About Ruta";
+            this.aboutButton.Click += new System.EventHandler(this.aboutButton_Click);
             // 
             // autoSaveTimer
             // 

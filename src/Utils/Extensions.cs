@@ -59,6 +59,11 @@ namespace Ruta
             return !string.IsNullOrWhiteSpace(data);
         }
 
+        public static string AddLines(this string data, params string[] lines)
+        {
+            return data + Environment.NewLine + string.Join(Environment.NewLine, lines);
+        }
+
         public static string Unescape(this string data)
         {
             return data.Replace("{$PIPE}", "|");
