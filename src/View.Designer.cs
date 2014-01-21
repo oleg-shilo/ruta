@@ -447,6 +447,7 @@ namespace Ruta
             this.helpButton.Size = new System.Drawing.Size(23, 22);
             this.helpButton.Text = "toolStripButton1";
             this.helpButton.ToolTipText = "Show help";
+            this.helpButton.Click += new System.EventHandler(this.helpButton_Click);
             // 
             // aboutButton
             // 

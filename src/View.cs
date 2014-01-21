@@ -25,7 +25,7 @@ using System.Windows.Forms;
  + Shortcuts in buttons tooltips
  + clear destination on save
  + WEB
-    + Auto-play button 
+    + Auto-play button
  + External Drag-n-drop
      + File to albumContent
      + Folder to albumContent
@@ -34,12 +34,12 @@ using System.Windows.Forms;
     + auto-save
     + generate
     + edit
- - Custom Actions
+ + Custom Actions
     + OnExport allow downsizing the images
     + OnSave rename items to get sequential naming
     + generate
     + edit
-    - Help
+    + Help
  - Buttons Actions
     + move selection up/down
     + scale thumbnail
@@ -53,7 +53,7 @@ using System.Windows.Forms;
     + Config
     + Edit image
     + About
-    - Help
+    + Help
  - after auto-scrolling reposition items to make the selected item at the cursor position
  - error handling
  - IE ShowMixed content warning (http://www.withsteps.com/694/how-to-remove-only-secure-content-is-displayed-ie9-message.html)
@@ -98,7 +98,10 @@ namespace Ruta
             toolStrip1.BackColor = Color.FromArgb(0x44, 0x44, 0x44);
             albumPath.Text = null;
 
-            ScaleItems(1f);
+            this.SafeExecute(() =>
+            {
+                ScaleItems(1f);
+            });
 
             openRootDirButton.BindToShortcut(Keys.O, Keys.Control);
             addImageButton.BindToShortcut(Keys.Add, Keys.Control);
@@ -150,7 +153,7 @@ namespace Ruta
             string start = (visibleItems.Item1 != -1) ? (albumContent.Items[visibleItems.Item1] as AlbumItem).Name : "-1";
             string end = (visibleItems.Item2 != -1) ? (albumContent.Items[visibleItems.Item2] as AlbumItem).Name : "-1";
 
-            Debug.WriteLine("Visible Items: {0} ... {1}", start, visibleItems.Item2);
+            //Debug.WriteLine("Visible Items: {0} ... {1}", start, visibleItems.Item2);
         }
 
         struct DragContext
@@ -305,7 +308,7 @@ namespace Ruta
                 MessageBox.Show("Create and/or select the album first.", "Ruta");
             }
             else
-                this.SafeExecute(null, () =>
+                this.SafeExecute(() =>
                     {
                         try
                         {
@@ -399,61 +402,64 @@ namespace Ruta
 
         void albumsList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (ignoreNextAlbumSelection)
-            {
-                ignoreNextAlbumSelection = false;
-                return;
-            }
+            this.SafeExecute(Cursors.WaitCursor, () =>
+           {
+               if (ignoreNextAlbumSelection)
+               {
+                   ignoreNextAlbumSelection = false;
+                   return;
+               }
 
-            if (IsModified)
-            {
-                var response = MessageBox.Show("Save album '" + albumsList.Text + "'?", "Ruta", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
-                if (DialogResult.Yes == response)
-                {
-                    this.SafeExecute(() =>
-                    {
-                        if (lastSelectedAlbum != null)
-                        {
-                            //note album selection has already happened but the album content is not
-                            //updated yet and it still corresponds to the previously selected album
-                            lastSelectedAlbum.Items = albumContent.Items.ToArray<AlbumItem>();
-                            lastSelectedAlbum.Save();
-                            IsModified = false;
-                        }
-                    });
-                }
-                else if (DialogResult.Cancel == response)
-                {
-                    ignoreNextAlbumSelection = true;
-                    albumsList.SelectedItem = lastSelectedAlbum; //restore the original selection
-                    return;
-                }
-            }
+               if (IsModified)
+               {
+                   var response = MessageBox.Show("Save album '" + albumsList.Text + "'?", "Ruta", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                   if (DialogResult.Yes == response)
+                   {
+                       this.SafeExecute(() =>
+                       {
+                           if (lastSelectedAlbum != null)
+                           {
+                               //note album selection has already happened but the album content is not
+                               //updated yet and it still corresponds to the previously selected album
+                               lastSelectedAlbum.Items = albumContent.Items.ToArray<AlbumItem>();
+                               lastSelectedAlbum.Save();
+                               IsModified = false;
+                           }
+                       });
+                   }
+                   else if (DialogResult.Cancel == response)
+                   {
+                       ignoreNextAlbumSelection = true;
+                       albumsList.SelectedItem = lastSelectedAlbum; //restore the original selection
+                       return;
+                   }
+               }
 
-            albumContent.Items.Clear();
-            if (albumsList.SelectedItem != null)
-            {
-                var album = albumsList.SelectedItem as Album;
-                lastSelectedAlbum = album;
+               albumContent.Items.Clear();
+               if (albumsList.SelectedItem != null)
+               {
+                   var album = albumsList.SelectedItem as Album;
+                   lastSelectedAlbum = album;
 
-                Settings.LastRoot = Global.Repository.RootDirectory;
-                Settings.LastAlbum = album.ToString();
-                Settings.Save();
+                   Settings.LastRoot = Global.Repository.RootDirectory;
+                   Settings.LastAlbum = album.ToString();
+                   Settings.Save();
 
-                albumContent.Items.AddRange(album.Items.ToArray());
+                   albumContent.Items.AddRange(album.Items.ToArray());
 
-                album.Items.ToList().ForEach(x => x.OnTitleChanged = item =>
-                                                                     {
-                                                                         IsModified = true;
-                                                                         UpdateTitle(item);
-                                                                     });
-                if (album.Items.Any())
-                    albumContent.SelectedIndex = 0;
-                albumPath.Text = album.GetAlbumDirectory();
-            }
+                   album.Items.ToList().ForEach(x => x.OnTitleChanged = item =>
+                                                                        {
+                                                                            IsModified = true;
+                                                                            UpdateTitle(item);
+                                                                        });
+                   if (album.Items.Any())
+                       albumContent.SelectedIndex = 0;
+                   albumPath.Text = album.GetAlbumDirectory();
+               }
 
-            SyncDetails();
-            IsModified = false;
+               SyncDetails();
+               IsModified = false;
+           });
         }
 
         void UpdateTitle(AlbumItem item)
@@ -489,12 +495,15 @@ namespace Ruta
 
         void saveToolStripButton_Click(object sender, EventArgs e)
         {
-            if (albumsList.SelectedItem != null)
-            {
-                var album = (albumsList.SelectedItem as Album);
-                album.Items = albumContent.Items.ToArray<AlbumItem>();
-                album.Save();
-            }
+           this.SafeExecute(Cursors.WaitCursor, () =>
+           {
+               if (albumsList.SelectedItem != null)
+               {
+                   var album = (albumsList.SelectedItem as Album);
+                   album.Items = albumContent.Items.ToArray<AlbumItem>();
+                   album.Save();
+               }
+           });
         }
 
         Brush backColor = new SolidBrush(Color.FromArgb(0x33, 0x33, 0x33));
@@ -601,23 +610,26 @@ namespace Ruta
 
         void timer1_Tick(object sender, EventArgs e)
         {
-            if (IsDragging)
-            {
-                if ((Control.MouseButtons & MouseButtons.Left) != MouseButtons.Left)
-                {
-                    var point = albumContent.PointToClient(Cursor.Position);
-                    if (!albumContent.ClientRectangle.Contains(point))
-                    {
-                        int threshold = 15;
-                        if (Math.Abs(dragStartPoint.X - Cursor.Position.X) > threshold ||
-                            Math.Abs(dragStartPoint.Y - Cursor.Position.Y) > threshold)
-                        {
-                            StopDraggng();
-                            timer1.Enabled = false;
-                        }
-                    }
-                }
-            }
+            this.SafeExecute(() =>
+           {
+               if (IsDragging)
+               {
+                   if ((Control.MouseButtons & MouseButtons.Left) != MouseButtons.Left)
+                   {
+                       var point = albumContent.PointToClient(Cursor.Position);
+                       if (!albumContent.ClientRectangle.Contains(point))
+                       {
+                           int threshold = 15;
+                           if (Math.Abs(dragStartPoint.X - Cursor.Position.X) > threshold ||
+                               Math.Abs(dragStartPoint.Y - Cursor.Position.Y) > threshold)
+                           {
+                               StopDraggng();
+                               timer1.Enabled = false;
+                           }
+                       }
+                   }
+               }
+           });
         }
 
         void albumContent_MouseDown(object sender, MouseEventArgs e)
@@ -642,26 +654,29 @@ namespace Ruta
 
         void SyncDetails()
         {
-            if (!suppressDetailsSync)
-                try
-                {
-                    if (albumContent.SelectedIndices.Count == 1)
-                    {
-                        propertyGrid1.SelectedObject = albumContent.SelectedItem;
+            this.SafeExecute(() =>
+           {
+               if (!suppressDetailsSync)
+                   try
+                   {
+                       if (albumContent.SelectedIndices.Count == 1)
+                       {
+                           propertyGrid1.SelectedObject = albumContent.SelectedItem;
 
-                        var item = propertyGrid1.SelectedObject as AlbumItem;
-                        if (item != null)
-                            pictureBox1.ImageLocation = item.Location;
-                        else
-                            pictureBox1.ImageLocation = null;
-                    }
-                    else if (albumContent.SelectedIndices.Count == 0)
-                    {
-                        propertyGrid1.SelectedObject = null;
-                        pictureBox1.ImageLocation = null;
-                    }
-                }
-                catch { }
+                           var item = propertyGrid1.SelectedObject as AlbumItem;
+                           if (item != null)
+                               pictureBox1.ImageLocation = item.Location;
+                           else
+                               pictureBox1.ImageLocation = null;
+                       }
+                       else if (albumContent.SelectedIndices.Count == 0)
+                       {
+                           propertyGrid1.SelectedObject = null;
+                           pictureBox1.ImageLocation = null;
+                       }
+                   }
+                   catch { }
+           });
         }
 
         void propertyGrid1_ClientSizeChanged(object sender, EventArgs e)
@@ -698,20 +713,29 @@ namespace Ruta
 
         void largeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ScaleItems(2f);
-            ForceLayout();
+            this.SafeExecute(Cursors.WaitCursor, () =>
+           {
+               ScaleItems(2f);
+               ForceLayout();
+           });
         }
 
         void mediumToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ScaleItems(1f);
-            ForceLayout();
+            this.SafeExecute(Cursors.WaitCursor, () =>
+           {
+               ScaleItems(1f);
+               ForceLayout();
+           });
         }
 
         void smallToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ScaleItems(0.5f);
-            ForceLayout();
+            this.SafeExecute(Cursors.WaitCursor, () =>
+           {
+               ScaleItems(0.5f);
+               ForceLayout();
+           });
         }
 
         void ForceLayout()
@@ -769,28 +793,35 @@ namespace Ruta
         }
 
         bool suppressDetailsSync = false;
+
         void moveDownButton_Click(object sender, EventArgs e)
         {
-            suppressDetailsSync = true;
+            this.SafeExecute(() =>
+           {
+               suppressDetailsSync = true;
 
-            albumContent.MoveSelectionDown();
-            albumContent.Focus();
-            IsModified = true;
+               albumContent.MoveSelectionDown();
+               albumContent.Focus();
+               IsModified = true;
 
-            suppressDetailsSync = false;
-            SyncDetails();
+               suppressDetailsSync = false;
+               SyncDetails();
+           });
         }
 
         void moveUpButton_Click(object sender, EventArgs e)
         {
-            suppressDetailsSync = true;
+            this.SafeExecute(() =>
+              {
+                  suppressDetailsSync = true;
 
-            albumContent.MoveSelectionUp();
-            albumContent.Focus();
-            IsModified = true;
+                  albumContent.MoveSelectionUp();
+                  albumContent.Focus();
+                  IsModified = true;
 
-            suppressDetailsSync = false;
-            SyncDetails();
+                  suppressDetailsSync = false;
+                  SyncDetails();
+              });
         }
 
         void saveButton_Click(object sender, EventArgs e)
@@ -947,43 +978,46 @@ namespace Ruta
 
         void addImageButton_Click(object sender, EventArgs e)
         {
-            if (albumsList.Items.Count == 0 || albumsList.SelectedIndex == -1)
-            {
-                MessageBox.Show("Create and/or select the album first.", "Ruta");
-                return;
-            }
+            this.SafeExecute(() =>
+           {
+               if (albumsList.Items.Count == 0 || albumsList.SelectedIndex == -1)
+               {
+                   MessageBox.Show("Create and/or select the album first.", "Ruta");
+                   return;
+               }
 
-            using (var dialog = new OpenFileDialog())
-            {
-                dialog.RestoreDirectory = true;
-                dialog.Multiselect = true;
+               using (var dialog = new OpenFileDialog())
+               {
+                   dialog.RestoreDirectory = true;
+                   dialog.Multiselect = true;
 
-                if (dialog.ShowDialog() == DialogResult.OK)
-                {
-                    var album = (albumsList.SelectedItem as Album);
-                    var newImages = dialog.FileNames
-                                          .Where(file => file.IsImageFile())
-                                          .Select(file => new AlbumItem
-                                                  {
-                                                      AlbumDir = album.GetAlbumDirectory(),
-                                                      Name = "<unassigned>",
-                                                      Location = file,
-                                                      Title = ""
-                                                  });
+                   if (dialog.ShowDialog() == DialogResult.OK)
+                   {
+                       var album = (albumsList.SelectedItem as Album);
+                       var newImages = dialog.FileNames
+                                             .Where(file => file.IsImageFile())
+                                             .Select(file => new AlbumItem
+                                                     {
+                                                         AlbumDir = album.GetAlbumDirectory(),
+                                                         Name = "<unassigned>",
+                                                         Location = file,
+                                                         Title = ""
+                                                     });
 
-                    albumContent.SelectedItems.Clear();
-                    foreach (var item in newImages)
-                    {
-                        item.Name = GenerateNewNextImageName(); //important to do now as GenerateNewNextImageName is based on the analysis of the items already in the abum
-                        albumContent.Items.Add(item);
-                        albumContent.SelectedItems.Add(item);
-                    }
+                       albumContent.SelectedItems.Clear();
+                       foreach (var item in newImages)
+                       {
+                           item.Name = GenerateNewNextImageName(); //important to do now as GenerateNewNextImageName is based on the analysis of the items already in the abum
+                           albumContent.Items.Add(item);
+                           albumContent.SelectedItems.Add(item);
+                       }
 
-                    IsModified = true;
-                    if (newImages.Count() != dialog.FileNames.Count())
-                        MessageBox.Show("Some of the input files are not valid image files", "Ruta");
-                }
-            }
+                       IsModified = true;
+                       if (newImages.Count() != dialog.FileNames.Count())
+                           MessageBox.Show("Some of the input files are not valid image files", "Ruta");
+                   }
+               }
+           });
         }
 
         private void playButton_Click(object sender, EventArgs e)
@@ -1009,17 +1043,20 @@ namespace Ruta
 
         private void deleteImageButton_Click(object sender, EventArgs e)
         {
-            if (albumContent.SelectedIndex != -1)
-            {
-                var index = albumContent.SelectedIndex;
-                foreach (var item in albumContent.SelectedItems.ToArray<object>())
-                    albumContent.Items.Remove(item);
+            this.SafeExecute(() =>
+           {
+               if (albumContent.SelectedIndex != -1)
+               {
+                   var index = albumContent.SelectedIndex;
+                   foreach (var item in albumContent.SelectedItems.ToArray<object>())
+                       albumContent.Items.Remove(item);
 
-                albumContent.SafeSelectItemAt(index);
+                   albumContent.SafeSelectItemAt(index);
 
-                albumContent.Focus();
-                IsModified = true;
-            }
+                   albumContent.Focus();
+                   IsModified = true;
+               }
+           });
         }
 
         private void deleteAlbumButton_Click(object sender, EventArgs e)
@@ -1111,6 +1148,15 @@ namespace Ruta
         {
             using (var dialog = new AboutBox())
                 dialog.ShowDialog();
+        }
+
+        private void helpButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Process.Start("https://ruta.codeplex.com/documentation");
+            }
+            catch { }
         }
     }
 }

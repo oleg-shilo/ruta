@@ -27,7 +27,7 @@
     <DefineConstants>DEBUG;TRACE;CSS_PROJECT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
@@ -70,10 +70,6 @@
     <Reference Include="System.Core">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>System.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Linq">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>System.Linq.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
