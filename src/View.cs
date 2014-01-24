@@ -10,55 +10,8 @@ using System.Windows.Forms;
 
 /*
  TODO
- + Variable size of list items
- + Multiple selection
- + Save definition
- + album location as a link
- + show album dirty status
- + Should not allow changing current album selection, or creation if the current album is modified
- + buttons enabled state
- + settings class
- + SetRoot dialog
- + Generate album WebPage
- + IMG_0713_2_2.JPG thumbnail is generated incorrectly
- + Generate album WebPage with different drive file locations (ToRelativeUri should return absolute in such cases)
- + Shortcuts in buttons tooltips
- + clear destination on save
- + WEB
-    + Auto-play button
- + External Drag-n-drop
-     + File to albumContent
-     + Folder to albumContent
- + Sample photo album on csscript.net/Dropbox
- + config dialog
-    + auto-save
-    + generate
-    + edit
- + Custom Actions
-    + OnExport allow downsizing the images
-    + OnSave rename items to get sequential naming
-    + generate
-    + edit
-    + Help
- - Buttons Actions
-    + move selection up/down
-    + scale thumbnail
-    + Create Album
-    + Add image
-    + Delete Image (respect selection)
-    + Set/Open RootAlbumsFolder
-    + Delete Album
-    + Play
-    + Export album
-    + Config
-    + Edit image
-    + About
-    + Help
  - after auto-scrolling reposition items to make the selected item at the cursor position
- - error handling
- - IE ShowMixed content warning (http://www.withsteps.com/694/how-to-remove-only-secure-content-is-displayed-ie9-message.html)
- - Chrome ShowMixed content warning (http://www.uwp.edu/departments/campus.technology/information/learning_tech/D2L_Instr/Browsers.pdf)
- */
+  */
 
 namespace Ruta
 {
@@ -495,15 +448,15 @@ namespace Ruta
 
         void saveToolStripButton_Click(object sender, EventArgs e)
         {
-           this.SafeExecute(Cursors.WaitCursor, () =>
-           {
-               if (albumsList.SelectedItem != null)
-               {
-                   var album = (albumsList.SelectedItem as Album);
-                   album.Items = albumContent.Items.ToArray<AlbumItem>();
-                   album.Save();
-               }
-           });
+            this.SafeExecute(Cursors.WaitCursor, () =>
+            {
+                if (albumsList.SelectedItem != null)
+                {
+                    var album = (albumsList.SelectedItem as Album);
+                    album.Items = albumContent.Items.ToArray<AlbumItem>();
+                    album.Save();
+                }
+            });
         }
 
         Brush backColor = new SolidBrush(Color.FromArgb(0x33, 0x33, 0x33));
