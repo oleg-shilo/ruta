@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Windows.Forms;
 
@@ -21,7 +22,7 @@ namespace Ruta
         {
             RunProcess(app, string.Format("-generate \"{0}\" \"{1}\"", inputFile, outputFile), "save album");
         }
-        
+
         public static void RunExportGalleryProcess(string app, string inputFile, string outputDir)
         {
             RunProcess(app, string.Format("-export \"{0}\" \"{1}\"", inputFile, outputDir), "export album");
@@ -168,6 +169,8 @@ namespace Ruta
 
         }
 
+        static public string PrevImageTitleTag = "-";
+
         public void BuildGalleryPage(string definitionFile, string destinationFile, bool localContent = false)
         {
             string destinationDir = Path.GetDirectoryName(destinationFile);
@@ -209,19 +212,42 @@ namespace Ruta
             var builder = new StringBuilder();
             var injectionBuilder = new StringBuilder();
 
+            string prevTitle = " ";
+
+            Func<string, string> ToHtmlTitle = rawTitle =>
+                {
+                    string retval = rawTitle;
+                    if (string.IsNullOrEmpty(rawTitle))
+                        retval = " ";
+                    else if (rawTitle == PrevImageTitleTag)
+                        retval = prevTitle;
+
+                    retval = SecurityElement.Escape(retval);
+                    return retval;
+                };
+
             builder.AppendLine("");
             if (albumSpec.Any())
-                builder.AppendLine("    setInitalBackground(\"" + albumSpec.First().ImageUrl + "\");");
+                builder.AppendLine("    setInitalBackground(\"" + albumSpec.First().ImageUrl + "\",\"" + ToHtmlTitle(albumSpec.First().Title) + "\");");
 
             bool injectingHtml = true;
 
             foreach (var data in albumSpec)
             {
                 Console.WriteLine("Injecting: " + data.ImageUrl);
+
+                //HTML        | Browser
+                //-------------------------------------
+                //empty title | show the previous title
+                //white space | show the empty title
+
+                string title =
+                prevTitle = ToHtmlTitle(data.Title);
+
                 if (!injectingHtml)
                 {
                     //injecting JS
-                    builder.AppendLine(string.Format("    addImage(\"{0}\", \"{1}\", \"{2}\");", data.ImageUrl, data.Title, data.Thumb));
+                    builder.AppendLine(string.Format("    addImage(\"{0}\", \"{1}\", \"{2}\");", data.ImageUrl, title, data.Thumb));
                 }
                 else
                 {
@@ -230,7 +256,7 @@ namespace Ruta
                         "<div class=\"content\">" +
                         "   <div>" +
                         "       <a href=\"" + data.ImageUrl + "\">" +
-                        "           <img src=\"" + data.Thumb + "\" title=\"" + data.Title + "\" alt=\"" + data.Title + "\" class=\"thumb\" />" +
+                        "           <img src=\"" + data.Thumb + "\" title=\"" + title + "\" alt=\"" + title + "\" class=\"thumb\" />" +
                         "       </a>" +
                         "   </div>" +
                         "</div>";

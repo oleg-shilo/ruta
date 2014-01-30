@@ -80,6 +80,9 @@ namespace Ruta
             this.SafeExecute(Cursors.WaitCursor, () =>
             {
                 albumsList.Items.Clear();
+                albumContent.Items.Clear();
+                SyncDetails();
+
                 albumsList.Items.AddRange(Global.Repository.GetAlbums().OrderBy(x => x.Name).ToArray());
                 if (albumsList.Items.Count > 0)
                     albumsList.SelectedIndex = 0;
@@ -440,6 +443,11 @@ namespace Ruta
             if (string.IsNullOrEmpty(item.Title))
             {
                 text = "< title is not specified >";
+                f = new Font(f, FontStyle.Italic | FontStyle.Regular);
+            }
+            else if (item.Title == Repository.PrevImageTitleTag)
+            {
+                text = "< same as previous image title >";
                 f = new Font(f, FontStyle.Italic | FontStyle.Regular);
             }
 

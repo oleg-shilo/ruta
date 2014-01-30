@@ -207,7 +207,10 @@ namespace Ruta
         {
             string modifiersDisplay = modifiers.ToString().Replace("|", "+").Replace("Control", "Ctrl");
 
-            button.ToolTipText += "\n" + modifiersDisplay + "+" + key;
+            if (modifiers == Keys.None)
+                button.ToolTipText += "\n" + key;
+            else
+                button.ToolTipText += "\n" + modifiersDisplay + "+" + key;
             button.Tag = new Tuple<Keys, Keys>(key, modifiers);
         }
 

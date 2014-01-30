@@ -127,9 +127,10 @@ function addImage(newImage, title, thimbImage) {
                                    .replace('$title', title));
 }
 
-function setInitalBackground(imagePath){
+function setInitalBackground(imagePath, title) {
     $("#bgimg").attr("width",$outer_container.width())
                .attr("src", imagePath)
+               .attr("title", title)
 }
 
 $(window).load(function() {
